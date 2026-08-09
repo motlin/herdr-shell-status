@@ -1,3 +1,7 @@
+if (( $+functions[herdr_shell_status_disable] )); then
+  herdr_shell_status_disable
+fi
+
 typeset -ga HERDR_SHELL_STATUS_DELEGATES
 typeset -g _HERDR_SHELL_STATUS_ACTIVE=0
 typeset -g _HERDR_SHELL_STATUS_BIN=""
