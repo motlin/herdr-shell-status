@@ -13,7 +13,11 @@ watch_for_focus() {
 
   for ((attempt = 0; attempt < 43200; attempt++)); do
     response="$("$herdr_bin" pane get "$pane_id" 2>/dev/null)" || return 0
-    focused="$(jq -er '.result.pane.focused' <<< "$response" 2>/dev/null)" || return 0
+    focused="$(
+      jq -r \
+        'if (.result.pane.focused | type) == "boolean" then .result.pane.focused else error("focused must be boolean") end' \
+        <<< "$response" 2>/dev/null
+    )" || return 0
     if [[ "$focused" == true ]]; then
       "$herdr_bin" pane release-agent "$pane_id" \
         --source "$source_id" \
@@ -97,7 +101,7 @@ lifecycle_active=0
 finish_lifecycle() {
   local command_status=$?
   local final_state
-  local -a message_arguments=()
+  local -a report_arguments
 
   trap - EXIT
   [[ "$lifecycle_active" == 1 ]] || return "$command_status"
@@ -106,15 +110,20 @@ finish_lifecycle() {
     final_state=idle
   else
     final_state=blocked
-    message_arguments=(--message "command exited with status $command_status")
   fi
 
-  if "$herdr_bin" pane report-agent "$pane_id" \
-    --source "$source_id" \
-    --agent "$agent_label" \
-    --state "$final_state" \
-    "${message_arguments[@]}" >/dev/null 2>&1; then
-    "$0" __watch_for_focus "$herdr_bin" "$pane_id" "$source_id" "$agent_label" \
+  report_arguments=(
+    pane report-agent "$pane_id"
+    --source "$source_id"
+    --agent "$agent_label"
+    --state "$final_state"
+  )
+  if [[ "$final_state" == blocked ]]; then
+    report_arguments+=(--message "command exited with status $command_status")
+  fi
+
+  if "$herdr_bin" "${report_arguments[@]}" >/dev/null 2>&1; then
+    nohup "$0" __watch_for_focus "$herdr_bin" "$pane_id" "$source_id" "$agent_label" \
       </dev/null >/dev/null 2>&1 &
   fi
 

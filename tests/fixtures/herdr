@@ -14,5 +14,9 @@ set -euo pipefail
 if [[ "${1:-}" == process-info || "${2:-}" == process-info ]]; then
   printf '{"result":{"process_info":{"shell_pid":%s}}}\n' "$HERDR_TEST_SHELL_PID"
 elif [[ "${1:-}" == get || "${2:-}" == get ]]; then
-  printf '{"result":{"pane":{"focused":%s}}}\n' "${HERDR_TEST_FOCUSED:-true}"
+  focused="${HERDR_TEST_FOCUSED:-true}"
+  if [[ -n "${HERDR_TEST_FOCUS_FILE:-}" ]]; then
+    focused="$(< "$HERDR_TEST_FOCUS_FILE")"
+  fi
+  printf '{"result":{"pane":{"focused":%s}}}\n' "$focused"
 fi

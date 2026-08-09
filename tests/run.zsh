@@ -39,7 +39,7 @@ wait_for_line_count() {
   local attempt
   local actual_count
 
-  for attempt in {1..100}; do
+  for attempt in {1..250}; do
     actual_count="$(wc -l < "$log_file" | tr -d ' ')"
     (( actual_count >= expected_count )) && return 0
     sleep 0.02
@@ -120,6 +120,22 @@ pane|report-agent|w-test:p-test|--source|user:herdr-run:PID|--agent|build|--stat
 pane|get|w-test:p-test
 pane|release-agent|w-test:p-test|--source|user:herdr-run:PID|--agent|build
 ' "$failure_log"
+
+delayed_focus_log="$test_directory/delayed-focus.log"
+focus_file="$test_directory/focused"
+: > "$delayed_focus_log"
+print false > "$focus_file"
+HERDR_TEST_LOG="$delayed_focus_log" HERDR_TEST_FOCUS_FILE="$focus_file" HERDR_TEST_SHELL_PID=$$ \
+  "$repository_root/bin/herdr-run" --label build -- true
+wait_for_line_count 3 "$delayed_focus_log"
+print true > "$focus_file"
+wait_for_line_count 5 "$delayed_focus_log"
+assert_file_equals_with_normalized_process_id 'pane|report-agent|w-test:p-test|--source|user:herdr-run:PID|--agent|build|--state|working
+pane|report-agent|w-test:p-test|--source|user:herdr-run:PID|--agent|build|--state|idle
+pane|get|w-test:p-test
+pane|get|w-test:p-test
+pane|release-agent|w-test:p-test|--source|user:herdr-run:PID|--agent|build
+' "$delayed_focus_log"
 
 outside_log="$test_directory/outside.log"
 : > "$outside_log"
