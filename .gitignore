@@ -1,1 +1,53 @@
+# Common repository ignore patterns
+
+# Environment and secrets
+.envrc
+.env
+.env.*
+!.env.example
+
+# Editor/IDE
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+.idea/**/aws.xml
+.idea/**/contentModel.xml
+.idea/**/dataSources/
+.idea/**/dataSources.ids
+.idea/**/dataSources.local.xml
+.idea/**/sqlDataSources.xml
+.idea/**/dynamic.xml
+.idea/**/uiDesigner.xml
+.idea/**/dbnavigator.xml
+.idea/**/gradle.xml
+.idea/**/libraries
+.idea/**/mongoSettings.xml
+.idea/replstate.xml
+.idea/sonarlint/
+.idea/httpRequests
+.idea/caches/build_file_checksums.ser
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Local tooling
+JUSTFILE_BRANCH
 .test.*
+
+# LLM context (Claude Code, etc.)
+.llm/
+/.claude/*
+!/.claude/commands/
+!/.claude/includes/
+/.claude/settings.local.json

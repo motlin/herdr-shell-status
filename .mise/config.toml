@@ -1,0 +1,10 @@
+[tools]
+just = "1.56.0"
+pre-commit = "4.6.0"
+node = "26.3.0"
+"npm:markdownlint-cli2" = "0.22.1"
+"npm:vite-plus" = "0.1.24"
+shellcheck = "0.11.0"
+
+[env]
+TERM = 'xterm-256color'

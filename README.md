@@ -45,7 +45,12 @@ Add the repository's `bin` directory to `PATH` to invoke `herdr-run` by name.
 ## Validate
 
 ```console
+mise install
 bin/check
 ```
 
-The test suite uses a fake Herdr executable and does not modify live pane state.
+`bin/check` runs the Just-based syntax, ShellCheck, test, formatting, and linting pipeline. The test suite uses a fake Herdr executable and does not modify live pane state.
+
+## License
+
+Apache-2.0.
