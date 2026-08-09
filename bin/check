@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+zsh -n "$repository_root/herdr-shell-status.plugin.zsh"
+bash -n "$repository_root/bin/herdr-run"
+bash -n "$repository_root/tests/fixtures/herdr"
+zsh -n "$repository_root/tests/run.zsh"
+zsh "$repository_root/tests/run.zsh"

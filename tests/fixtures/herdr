@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+{
+  printf '%s' "$1"
+  shift
+  for argument in "$@"; do
+    printf '|%s' "$argument"
+  done
+  printf '\n'
+} >> "$HERDR_TEST_LOG"
+
+if [[ "${1:-}" == process-info || "${2:-}" == process-info ]]; then
+  printf '{"result":{"process_info":{"shell_pid":%s}}}\n' "$HERDR_TEST_SHELL_PID"
+elif [[ "${1:-}" == get || "${2:-}" == get ]]; then
+  printf '{"result":{"pane":{"focused":%s}}}\n' "${HERDR_TEST_FOCUSED:-true}"
+fi
