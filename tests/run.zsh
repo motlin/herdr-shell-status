@@ -56,6 +56,8 @@ HERDR_TEST_LOG="$plugin_log" zsh -dfi -c '
   _herdr_shell_status_preexec "true" "true" "true"
   true
   _herdr_shell_status_precmd
+  _herdr_shell_status_preexec "source plugin" "source plugin" "source plugin"
+  source "$1/herdr-shell-status.plugin.zsh"
   _herdr_shell_status_preexec "false" "false" "false"
   false
   _herdr_shell_status_precmd
@@ -65,6 +67,9 @@ HERDR_TEST_LOG="$plugin_log" zsh -dfi -c '
 assert_file_equals 'pane|process-info|--pane|w-test:p-test
 pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|working
 pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|idle
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|working
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|process-info|--pane|w-test:p-test
 pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|working
 pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|blocked|--message|command exited with status 1
 pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
