@@ -53,11 +53,15 @@ plugin_log="$test_directory/plugin.log"
 HERDR_TEST_LOG="$plugin_log" zsh -dfi -c '
   export HERDR_TEST_SHELL_PID=$$
   source "$1/herdr-shell-status.plugin.zsh"
+  [[ "${commands[herdr-run]:-}" == "$1/bin/herdr-run" ]]
   _herdr_shell_status_preexec "true" "true" "true"
   true
   _herdr_shell_status_precmd
   _herdr_shell_status_preexec "source plugin" "source plugin" "source plugin"
   source "$1/herdr-shell-status.plugin.zsh"
+  typeset -a matching_plugin_paths
+  matching_plugin_paths=(${(M)path:#${1}/bin})
+  (( ${#matching_plugin_paths} == 1 ))
   _herdr_shell_status_preexec "false" "false" "false"
   false
   _herdr_shell_status_precmd

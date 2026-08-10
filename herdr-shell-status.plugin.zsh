@@ -2,6 +2,11 @@ if (( $+functions[herdr_shell_status_disable] )); then
   herdr_shell_status_disable
 fi
 
+typeset -g _HERDR_SHELL_STATUS_ROOT="${${(%):-%x}:A:h}"
+if (( ${path[(Ie)${_HERDR_SHELL_STATUS_ROOT}/bin]} == 0 )); then
+  path=("${_HERDR_SHELL_STATUS_ROOT}/bin" $path)
+fi
+
 typeset -ga HERDR_SHELL_STATUS_DELEGATES
 typeset -g _HERDR_SHELL_STATUS_ACTIVE=0
 typeset -g _HERDR_SHELL_STATUS_BIN=""

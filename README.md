@@ -6,7 +6,24 @@ The integration activates only in the root interactive shell of a Herdr pane. Ne
 
 ## Install
 
-Clone the repository, then source the plugin near the end of `.zshrc`:
+### Oh My Zsh
+
+Clone the repository into the custom plugin directory:
+
+```console
+git clone https://github.com/motlin/herdr-shell-status.git \
+  "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/herdr-shell-status"
+```
+
+Add `herdr-shell-status` to the plugin list in `.zshrc`:
+
+```zsh
+plugins=(... herdr-shell-status)
+```
+
+### Direct source
+
+Clone the repository, then source it from `.zshrc`:
 
 ```zsh
 if [[ -r "$HOME/projects/herdr-shell-status/herdr-shell-status.plugin.zsh" ]]; then
@@ -14,7 +31,8 @@ if [[ -r "$HOME/projects/herdr-shell-status/herdr-shell-status.plugin.zsh" ]]; t
 fi
 ```
 
-The plugin requires `herdr`, `jq`, `HERDR_ENV=1`, and `HERDR_PANE_ID`. It fails open when any requirement is unavailable.
+The plugin adds its `bin` directory to `PATH`, making `herdr-run` available without a separate link. It requires `herdr`,
+`jq`, `HERDR_ENV=1`, and `HERDR_PANE_ID`. It fails open when any requirement is unavailable.
 
 ## Automatic reporting
 
