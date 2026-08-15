@@ -132,7 +132,10 @@ herdr_shell_status_enable() {
 
   [[ -o interactive ]] || return 1
   [[ "${HERDR_ENV:-}" == 1 && -n "${HERDR_PANE_ID:-}" ]] || return 1
-  (( $+commands[jq] )) || return 1
+  if ! (( $+commands[jq] )); then
+    print -u2 -r -- "herdr-shell-status: jq not found; command status reporting disabled"
+    return 1
+  fi
 
   if [[ -n "${HERDR_BIN_PATH:-}" && -x "$HERDR_BIN_PATH" ]]; then
     _HERDR_SHELL_STATUS_BIN="$HERDR_BIN_PATH"
@@ -157,5 +160,5 @@ herdr_shell_status_enable() {
 }
 
 if [[ -o interactive ]]; then
-  herdr_shell_status_enable 2>/dev/null || true
+  herdr_shell_status_enable || true
 fi

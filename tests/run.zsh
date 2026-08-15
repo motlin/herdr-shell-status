@@ -71,4 +71,21 @@ HERDR_TEST_LOG="$noninteractive_log" zsh -dfc '
 ' test-shell "$repository_root"
 assert_file_equals '' "$noninteractive_log"
 
+missing_jq_log="$test_directory/missing-jq.log"
+missing_jq_stderr="$test_directory/missing-jq.stderr"
+: > "$missing_jq_log"
+HERDR_TEST_LOG="$missing_jq_log" zsh -dfi -c '
+  export HERDR_TEST_SHELL_PID=$$
+  path=()
+  source "$1/herdr-shell-status.plugin.zsh"
+' test-shell "$repository_root" >/dev/null 2> "$missing_jq_stderr"
+grep -q 'jq' "$missing_jq_stderr" || fail "Expected a jq warning on stderr when jq is missing inside a Herdr pane"
+assert_file_equals '' "$missing_jq_log"
+
+outside_stderr="$test_directory/outside.stderr"
+HERDR_ENV=0 zsh -dfi -c '
+  path=()
+  source "$1/herdr-shell-status.plugin.zsh"
+' test-shell "$repository_root" >/dev/null 2> "$outside_stderr"
+assert_file_equals '' "$outside_stderr"
 print 'All tests passed.'
