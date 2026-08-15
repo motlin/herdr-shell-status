@@ -56,16 +56,6 @@ Nested shells, including those launched by Claude or Codex, do not report. Nativ
 
 Toggle with `herdr_shell_status_disable` / `herdr_shell_status_enable`. Set `HERDR_SHELL_STATUS_DELEGATES` before sourcing to replace the default delegate list.
 
-## Explicit wrapper
-
-`herdr-run` reports a single command from scripts or non-Zsh shells. The plugin puts it on `PATH`:
-
-```console
-herdr-run --label build -- vp build
-```
-
-It preserves the wrapped command's exit status. Outside Herdr, it runs the command without reporting.
-
 ## License
 
 Apache-2.0.
