@@ -11,9 +11,9 @@ This Zsh plugin gives plain CLI commands the same dots. Every command run in a H
 
 ```mermaid
 flowchart LR
-    W((running)) -->|exit 0| I((succeeded))
-    W -->|nonzero exit| B((failed))
-    I -->|pane viewed| V((viewed))
+    W(("#nbsp;#nbsp;#nbsp;running#nbsp;#nbsp;")) -->|exit 0| I(("#nbsp;succeeded"))
+    W -->|nonzero exit| B(("#nbsp;#nbsp;#nbsp;#nbsp;failed#nbsp;#nbsp;#nbsp;#nbsp;"))
+    I -->|pane viewed| V(("#nbsp;#nbsp;#nbsp;viewed#nbsp;#nbsp;#nbsp;"))
     B -->|pane viewed| V
     style W fill:#f1c40f,stroke:#f1c40f,color:#000
     style B fill:#e74c3c,stroke:#e74c3c,color:#fff
@@ -22,8 +22,6 @@ flowchart LR
 ```
 
 ## Install
-
-Requires `herdr` and `jq`. The plugin fails open when either is missing or the shell is outside a Herdr pane.
 
 ### Oh My Zsh
 
