@@ -5,11 +5,9 @@
 This Zsh plugin gives plain CLI commands the same dots. Every command run in a Herdr pane is marked:
 
 - <img src="docs/dots/yellow.svg" width="14" alt="solid yellow dot"> **Yellow** while it runs.
-- <img src="docs/dots/red.svg" width="14" alt="solid red dot"> **Red** if it fails (nonzero exit).
 - <img src="docs/dots/blue.svg" width="14" alt="solid blue dot"> **Blue** if it succeeds (exit 0).
+- <img src="docs/dots/red.svg" width="14" alt="solid red dot"> **Red** if it fails (nonzero exit).
 - <img src="docs/dots/green.svg" width="14" alt="hollow green dot"> **Green** once you view the pane, clearing the status.
-
-All dots are solid except green, which is hollow.
 
 ```mermaid
 flowchart LR
