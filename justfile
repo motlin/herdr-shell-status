@@ -38,6 +38,46 @@ precommit: test pre-commit
 # Alias for `precommit`
 verify: precommit
 
+# Fail unless the version is `1.2.3` shaped and unused
+_check-release-version version:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    VERSION="{{version}}"
+
+    if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+        {{echo_command}} "Version must look like 1.2.3, got '$VERSION'"
+        exit 1
+    fi
+
+    if git rev-parse --verify --quiet "refs/tags/v$VERSION" >/dev/null; then
+        {{echo_command}} "Tag v$VERSION already exists"
+        exit 1
+    fi
+
+# Validate, tag, and push a release, like `just release 0.2.1`
+release version: (_check-release-version version) _check-local-modifications precommit
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    TAG="v{{version}}"
+    BRANCH="$(git symbolic-ref --short HEAD)"
+
+    if [ "$BRANCH" != "{{upstream_branch}}" ]; then
+        {{echo_command}} "Releases happen on {{upstream_branch}}, but HEAD is on $BRANCH"
+        exit 1
+    fi
+
+    git fetch origin "{{upstream_branch}}"
+
+    if [ "$(git rev-parse HEAD)" != "$(git rev-parse "origin/{{upstream_branch}}")" ]; then
+        {{echo_command}} "HEAD differs from origin/{{upstream_branch}}; push or pull first"
+        exit 1
+    fi
+
+    git tag "$TAG"
+    git push origin "$TAG"
+
 @clean: _clean-git
 
 echo_command := env('ECHO_COMMAND', "echo")
