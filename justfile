@@ -41,7 +41,7 @@ verify: precommit
 # Fail unless the version is `1.2.3` shaped and unused
 _check-release-version version:
     #!/usr/bin/env bash
-    set -euo pipefail
+    set -Eeuo pipefail
 
     VERSION="{{version}}"
 
@@ -58,7 +58,7 @@ _check-release-version version:
 # Validate, tag, and push a release, like `just release 0.2.1`
 release version: (_check-release-version version) _check-local-modifications precommit
     #!/usr/bin/env bash
-    set -euo pipefail
+    set -Eeuo pipefail
 
     TAG="v{{version}}"
     BRANCH="$(git symbolic-ref --short HEAD)"
