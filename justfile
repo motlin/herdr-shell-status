@@ -70,13 +70,15 @@ release version: (_check-release-version version) _check-local-modifications pre
 
     git fetch origin "{{upstream_branch}}"
 
-    if [ "$(git rev-parse HEAD)" != "$(git rev-parse "origin/{{upstream_branch}}")" ]; then
-        {{echo_command}} "HEAD differs from origin/{{upstream_branch}}; push or pull first"
+    if ! git merge-base --is-ancestor "origin/{{upstream_branch}}" HEAD; then
+        {{echo_command}} "Local {{upstream_branch}} is behind or diverged from origin/{{upstream_branch}}; update it first"
         exit 1
     fi
 
     git tag "$TAG"
-    git push origin "$TAG"
+    trap 'git tag --delete "$TAG" >/dev/null 2>&1 || true' ERR
+    git push --atomic origin "HEAD:refs/heads/{{upstream_branch}}" "refs/tags/$TAG"
+    trap - ERR
 
 @clean: _clean-git
 
