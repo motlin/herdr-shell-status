@@ -9,13 +9,13 @@ ANSI_HIDDEN := `tput invis`
 
 # Reset all attributes
 ANSI_NORMAL := `tput sgr0`
-ANSI_RESET_BOLD := `tput rmso`
-ANSI_RESET_DIM := `tput dim`
+ANSI_RESET_BOLD := `tput sgr0`
+ANSI_RESET_DIM := `tput sgr0`
 ANSI_RESET_ITALIC := `tput ritm`
 ANSI_RESET_UNDERLINE := `tput rmul`
-ANSI_RESET_BLINK := `tput blink`
-ANSI_RESET_REVERSE := `tput rev`
-ANSI_RESET_HIDDEN := `tput invis`
+ANSI_RESET_BLINK := `tput sgr0`
+ANSI_RESET_REVERSE := `tput sgr0`
+ANSI_RESET_HIDDEN := `tput sgr0`
 
 # Foreground colors (text)
 ANSI_BLACK := `tput setaf 0`
