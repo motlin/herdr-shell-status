@@ -21,7 +21,7 @@ format:
 lint:
     zsh -n herdr-shell-status.plugin.zsh
     zsh -n tests/run.zsh
-    shellcheck bin/check scripts/configure-github.sh tests/fixtures/herdr
+    shellcheck bin/check scripts/configure-github.sh tests/fixtures/gh tests/fixtures/herdr
 
 # Run the deterministic fake-Herdr test suite
 test: lint

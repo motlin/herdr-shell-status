@@ -128,28 +128,86 @@ check_protection_bool "BP_ALLOW_FORCE_PUSHES" "false" "force pushes by anyone wi
 if [[ "$UPDATE_PROTECTION" == "true" ]]; then
     echo "Updating branch protection..."
 
-    # Preserve existing values for required fields we don't have opinions on
-    BP_ENFORCE_ADMINS=$(echo "$CURRENT_PROTECTION" | jq -r '.enforce_admins.enabled // null')
-    BP_REVIEWS=$(echo "$CURRENT_PROTECTION" | jq -c '.required_pull_request_reviews // null')
-    BP_RESTRICTIONS=$(echo "$CURRENT_PROTECTION" | jq -c '.restrictions // null')
+    PROTECTION_PAYLOAD=$(jq -c \
+        --argjson status_checks_strict "$BP_STRICT" \
+        --argjson status_check_contexts "$BP_CONTEXTS" \
+        --argjson required_linear_history "$BP_LINEAR_HISTORY" \
+        --argjson allow_force_pushes "$BP_ALLOW_FORCE_PUSHES" \
+        '
+        def actor_names($property): map(.[$property]);
 
-    # A 403 here means the private repo lacks GitHub Pro/Team (branch protection
-    # is a paid feature on private repos). Treat that as non-fatal so the rest of
-    # the configuration (security, Actions permissions) still runs.
-    if cat << EOF | gh api "repos/${REPO}/branches/${BRANCH}/protection" --method PUT --input - > /dev/null
-{
-  "required_status_checks": {"strict": $BP_STRICT, "contexts": $BP_CONTEXTS},
-  "enforce_admins": $BP_ENFORCE_ADMINS,
-  "required_pull_request_reviews": $BP_REVIEWS,
-  "restrictions": $BP_RESTRICTIONS,
-  "required_linear_history": $BP_LINEAR_HISTORY,
-  "allow_force_pushes": $BP_ALLOW_FORCE_PUSHES
-}
-EOF
-    then
+        {
+            required_status_checks: {
+                strict: $status_checks_strict,
+                contexts: $status_check_contexts
+            },
+            enforce_admins: (.enforce_admins.enabled // null),
+            required_pull_request_reviews: (
+                if .required_pull_request_reviews == null then
+                    null
+                else
+                    .required_pull_request_reviews
+                    | {
+                        dismiss_stale_reviews,
+                        require_code_owner_reviews,
+                        required_approving_review_count,
+                        require_last_push_approval
+                    }
+                    + if .dismissal_restrictions == null then
+                        {}
+                    else
+                        {
+                            dismissal_restrictions: {
+                                users: (.dismissal_restrictions.users // [] | actor_names("login")),
+                                teams: (.dismissal_restrictions.teams // [] | actor_names("slug")),
+                                apps: (.dismissal_restrictions.apps // [] | actor_names("slug"))
+                            }
+                        }
+                    end
+                    + if .bypass_pull_request_allowances == null then
+                        {}
+                    else
+                        {
+                            bypass_pull_request_allowances: {
+                                users: (.bypass_pull_request_allowances.users // [] | actor_names("login")),
+                                teams: (.bypass_pull_request_allowances.teams // [] | actor_names("slug")),
+                                apps: (.bypass_pull_request_allowances.apps // [] | actor_names("slug"))
+                            }
+                        }
+                    end
+                end
+            ),
+            restrictions: (
+                if .restrictions == null then
+                    null
+                else
+                    .restrictions
+                    | {
+                        users: (.users // [] | actor_names("login")),
+                        teams: (.teams // [] | actor_names("slug")),
+                        apps: (.apps // [] | actor_names("slug"))
+                    }
+                end
+            ),
+            required_linear_history: $required_linear_history,
+            allow_force_pushes: $allow_force_pushes,
+            allow_deletions: (.allow_deletions.enabled // false),
+            block_creations: (.block_creations.enabled // false),
+            required_conversation_resolution: (.required_conversation_resolution.enabled // false),
+            lock_branch: (.lock_branch.enabled // false),
+            allow_fork_syncing: (.allow_fork_syncing.enabled // false)
+        }
+        ' <<< "$CURRENT_PROTECTION")
+
+    BRANCH_PROTECTION_ENDPOINT="repos/${REPO}/branches/${BRANCH}/protection"
+    if BRANCH_PROTECTION_ERROR=$(gh api "$BRANCH_PROTECTION_ENDPOINT" --method PUT --input - <<< "$PROTECTION_PAYLOAD" 2>&1 > /dev/null); then
         echo "  Branch protection updated."
     else
-        echo "  WARNING: could not update branch protection (private repo without GitHub Pro/Team?). Skipping."
+        BRANCH_PROTECTION_STATUS=$?
+        printf '  ERROR: gh api PUT %s failed with exit status %d:\n%s\n' \
+            "$BRANCH_PROTECTION_ENDPOINT" \
+            "$BRANCH_PROTECTION_STATUS" \
+            "$BRANCH_PROTECTION_ERROR" >&2
     fi
 fi
 

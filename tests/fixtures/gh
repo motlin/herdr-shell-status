@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+case "$1" in
+    repo)
+        if [[ "$*" == *"nameWithOwner"* ]]; then
+            echo "alice/example"
+        else
+            echo "main"
+        fi
+        ;;
+    api)
+        endpoint="$2"
+        method="GET"
+        shift 2
+        while (( $# > 0 )); do
+            case "$1" in
+                --method)
+                    method="$2"
+                    shift 2
+                    ;;
+                --input)
+                    shift 2
+                    ;;
+                *)
+                    shift
+                    ;;
+            esac
+        done
+
+        case "$endpoint:$method" in
+            repos/alice/example:GET)
+                jq -n '{
+                    allow_squash_merge: false,
+                    allow_merge_commit: true,
+                    allow_rebase_merge: true,
+                    allow_auto_merge: true,
+                    delete_branch_on_merge: true,
+                    allow_update_branch: true
+                }'
+                ;;
+            repos/alice/example/branches/main/protection:GET)
+                command cat "$GH_TEST_PROTECTION"
+                ;;
+            repos/alice/example/branches/main/protection:PUT)
+                command cat > "$GH_TEST_PROTECTION_PAYLOAD"
+                if [[ "${GH_TEST_FAIL_PROTECTION_UPDATE:-false}" == "true" ]]; then
+                    echo "gh: Validation Failed (HTTP 422)" >&2
+                    exit 1
+                fi
+                ;;
+            repos/alice/example/actions/permissions/workflow:GET)
+                jq -n '{
+                    default_workflow_permissions: "read",
+                    can_approve_pull_request_reviews: false
+                }'
+                ;;
+            repos/alice/example/actions/secrets:GET)
+                ;;
+            repos/alice/example/vulnerability-alerts:GET | repos/alice/example/automated-security-fixes:GET)
+                ;;
+            *)
+                echo "Unexpected gh api request: $endpoint ($method)" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    *)
+        echo "Unexpected gh command: $*" >&2
+        exit 1
+        ;;
+esac

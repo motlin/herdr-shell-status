@@ -88,4 +88,80 @@ HERDR_ENV=0 zsh -dfi -c '
   source "$1/herdr-shell-status.plugin.zsh"
 ' test-shell "$repository_root" >/dev/null 2> "$outside_stderr"
 assert_file_equals '' "$outside_stderr"
+
+branch_protection_payload="$test_directory/branch-protection-payload.json"
+print -r -- y | env \
+  GH_TEST_PROTECTION="$repository_root/tests/fixtures/branch-protection.json" \
+  GH_TEST_PROTECTION_PAYLOAD="$branch_protection_payload" \
+  bash "$repository_root/scripts/configure-github.sh" >/dev/null 2>&1
+
+normalized_branch_protection_payload="$test_directory/normalized-branch-protection-payload.json"
+jq --sort-keys . "$branch_protection_payload" > "$normalized_branch_protection_payload"
+expected_branch_protection_payload=$(jq --sort-keys . <<'JSON'
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": ["All checks"]
+  },
+  "enforce_admins": true,
+  "required_pull_request_reviews": {
+    "dismissal_restrictions": {
+      "users": ["alice"],
+      "teams": ["reviewers"],
+      "apps": ["example-review-app"]
+    },
+    "dismiss_stale_reviews": true,
+    "require_code_owner_reviews": true,
+    "required_approving_review_count": 2,
+    "require_last_push_approval": true,
+    "bypass_pull_request_allowances": {
+      "users": ["bob"],
+      "teams": ["maintainers"],
+      "apps": ["example-merge-app"]
+    }
+  },
+  "restrictions": {
+    "users": ["charlie"],
+    "teams": ["deployers"],
+    "apps": ["example-deploy-app"]
+  },
+  "required_linear_history": true,
+  "allow_force_pushes": false,
+  "allow_deletions": true,
+  "block_creations": true,
+  "required_conversation_resolution": true,
+  "lock_branch": true,
+  "allow_fork_syncing": true
+}
+JSON
+)
+assert_file_equals "$expected_branch_protection_payload"$'\n' "$normalized_branch_protection_payload"
+
+disabled_branch_protection="$test_directory/disabled-branch-protection.json"
+jq '
+  .required_status_checks.contexts = ["Old check"]
+  | .required_pull_request_reviews = null
+  | .restrictions = null
+' "$repository_root/tests/fixtures/branch-protection.json" > "$disabled_branch_protection"
+print -r -- y | env \
+  GH_TEST_PROTECTION="$disabled_branch_protection" \
+  GH_TEST_PROTECTION_PAYLOAD="$branch_protection_payload" \
+  bash "$repository_root/scripts/configure-github.sh" >/dev/null 2>&1
+jq --sort-keys . "$branch_protection_payload" > "$normalized_branch_protection_payload"
+expected_disabled_branch_protection_payload=$(print -r -- "$expected_branch_protection_payload" | jq '
+  .required_pull_request_reviews = null
+  | .restrictions = null
+')
+assert_file_equals "$expected_disabled_branch_protection_payload"$'\n' "$normalized_branch_protection_payload"
+
+branch_protection_error="$test_directory/branch-protection-error"
+print -r -- y | env \
+  GH_TEST_PROTECTION="$repository_root/tests/fixtures/branch-protection.json" \
+  GH_TEST_PROTECTION_PAYLOAD="$branch_protection_payload" \
+  GH_TEST_FAIL_PROTECTION_UPDATE=true \
+  bash "$repository_root/scripts/configure-github.sh" >/dev/null 2> "$branch_protection_error"
+assert_file_equals '  ERROR: gh api PUT repos/alice/example/branches/main/protection failed with exit status 1:
+gh: Validation Failed (HTTP 422)
+' "$branch_protection_error"
+
 print 'All tests passed.'

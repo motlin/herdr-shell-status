@@ -1,0 +1,118 @@
+{
+	"url": "https://example.com/repos/alice/example/branches/main/protection",
+	"required_status_checks": {
+		"url": "https://example.com/repos/alice/example/branches/main/protection/required_status_checks",
+		"strict": false,
+		"contexts": ["Old check"]
+	},
+	"enforce_admins": {
+		"url": "https://example.com/repos/alice/example/branches/main/protection/enforce_admins",
+		"enabled": true
+	},
+	"required_pull_request_reviews": {
+		"url": "https://example.com/repos/alice/example/branches/main/protection/required_pull_request_reviews",
+		"dismissal_restrictions": {
+			"url": "https://example.com/repos/alice/example/branches/main/protection/dismissal_restrictions",
+			"users": [
+				{
+					"login": "alice",
+					"id": 100,
+					"node_id": "TEST_USER_100",
+					"avatar_url": "https://example.com/alice.png",
+					"url": "https://example.com/users/alice",
+					"html_url": "https://example.com/alice",
+					"type": "User",
+					"site_admin": false
+				}
+			],
+			"teams": [
+				{
+					"id": 200,
+					"node_id": "TEST_TEAM_200",
+					"url": "https://example.com/teams/reviewers",
+					"html_url": "https://example.com/orgs/example/teams/reviewers",
+					"name": "Reviewers",
+					"slug": "reviewers",
+					"description": "Example review team",
+					"privacy": "closed",
+					"permission": "push"
+				}
+			],
+			"apps": [
+				{
+					"id": 300,
+					"slug": "example-review-app",
+					"node_id": "TEST_APP_300",
+					"name": "Example review app",
+					"owner": {
+						"login": "alice",
+						"id": 100
+					},
+					"html_url": "https://example.com/apps/example-review-app"
+				}
+			]
+		},
+		"dismiss_stale_reviews": true,
+		"require_code_owner_reviews": true,
+		"required_approving_review_count": 2,
+		"require_last_push_approval": true,
+		"bypass_pull_request_allowances": {
+			"users": [
+				{
+					"login": "bob",
+					"id": 400,
+					"url": "https://example.com/users/bob"
+				}
+			],
+			"teams": [
+				{
+					"id": 500,
+					"name": "Maintainers",
+					"slug": "maintainers",
+					"url": "https://example.com/teams/maintainers"
+				}
+			],
+			"apps": [
+				{
+					"id": 600,
+					"slug": "example-merge-app",
+					"name": "Example merge app",
+					"html_url": "https://example.com/apps/example-merge-app"
+				}
+			]
+		}
+	},
+	"restrictions": {
+		"url": "https://example.com/repos/alice/example/branches/main/protection/restrictions",
+		"users": [
+			{
+				"login": "charlie",
+				"id": 700,
+				"url": "https://example.com/users/charlie"
+			}
+		],
+		"teams": [
+			{
+				"id": 800,
+				"name": "Deployers",
+				"slug": "deployers",
+				"url": "https://example.com/teams/deployers"
+			}
+		],
+		"apps": [
+			{
+				"id": 900,
+				"slug": "example-deploy-app",
+				"name": "Example deploy app",
+				"html_url": "https://example.com/apps/example-deploy-app"
+			}
+		]
+	},
+	"required_linear_history": {"enabled": true},
+	"allow_force_pushes": {"enabled": false},
+	"allow_deletions": {"enabled": true},
+	"block_creations": {"enabled": true},
+	"required_conversation_resolution": {"enabled": true},
+	"lock_branch": {"enabled": true},
+	"allow_fork_syncing": {"enabled": true}
+}
