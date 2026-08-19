@@ -122,7 +122,7 @@ fi
 
 check_protection_bool "BP_STRICT"             "true"  "require branches to be up to date"
 check_protection_bool "BP_LINEAR_HISTORY"     "true"  "require linear history"
-check_protection_bool "BP_ALLOW_FORCE_PUSHES" "true"  "allow force pushes (for admins)"
+check_protection_bool "BP_ALLOW_FORCE_PUSHES" "false" "force pushes by anyone with repository write access"
 
 # Apply branch protection changes if any
 if [[ "$UPDATE_PROTECTION" == "true" ]]; then
