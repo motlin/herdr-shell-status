@@ -2,14 +2,13 @@ if (( $+functions[herdr_shell_status_disable] )); then
   herdr_shell_status_disable
 fi
 
-typeset -ga HERDR_SHELL_STATUS_DELEGATES
 typeset -g _HERDR_SHELL_STATUS_ACTIVE=0
 typeset -g _HERDR_SHELL_STATUS_BIN=""
 typeset -g _HERDR_SHELL_STATUS_SOURCE="user:zsh-command"
 typeset -g _HERDR_SHELL_STATUS_AGENT="cli"
 
-if (( ${#HERDR_SHELL_STATUS_DELEGATES} == 0 )); then
-  HERDR_SHELL_STATUS_DELEGATES=(
+if (( ! ${+HERDR_SHELL_STATUS_DELEGATES} )); then
+  typeset -ga HERDR_SHELL_STATUS_DELEGATES=(
     amp
     claude
     codex
@@ -30,6 +29,8 @@ if (( ${#HERDR_SHELL_STATUS_DELEGATES} == 0 )); then
     pi
     qodercli
   )
+else
+  typeset -ga HERDR_SHELL_STATUS_DELEGATES
 fi
 
 _herdr_shell_status_command_name() {

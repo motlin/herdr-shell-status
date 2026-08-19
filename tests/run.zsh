@@ -24,6 +24,39 @@ assert_file_equals() {
   diff -u "$expected_file" "$actual_file" || fail "Unexpected lifecycle calls"
 }
 
+delegate_configuration="$test_directory/delegate-configuration"
+HERDR_ENV=0 zsh -dfc '
+  source "$1/herdr-shell-status.plugin.zsh"
+  print -r -- "unset-initial:${#HERDR_SHELL_STATUS_DELEGATES}:${(j:,:)HERDR_SHELL_STATUS_DELEGATES}"
+  source "$1/herdr-shell-status.plugin.zsh"
+  print -r -- "unset-reload:${#HERDR_SHELL_STATUS_DELEGATES}:${(j:,:)HERDR_SHELL_STATUS_DELEGATES}"
+' test-shell "$repository_root" > "$delegate_configuration"
+assert_file_equals 'unset-initial:19:amp,claude,codex,copilot,cursor-agent,devin,droid,gemini,grok,hermes,kilo,kimi,kiro,maki,mastracode,omp,opencode,pi,qodercli
+unset-reload:19:amp,claude,codex,copilot,cursor-agent,devin,droid,gemini,grok,hermes,kilo,kimi,kiro,maki,mastracode,omp,opencode,pi,qodercli
+' "$delegate_configuration"
+
+HERDR_ENV=0 zsh -dfc '
+  typeset -ga HERDR_SHELL_STATUS_DELEGATES=()
+  source "$1/herdr-shell-status.plugin.zsh"
+  print -r -- "empty-initial:${#HERDR_SHELL_STATUS_DELEGATES}:${(j:,:)HERDR_SHELL_STATUS_DELEGATES}"
+  source "$1/herdr-shell-status.plugin.zsh"
+  print -r -- "empty-reload:${#HERDR_SHELL_STATUS_DELEGATES}:${(j:,:)HERDR_SHELL_STATUS_DELEGATES}"
+' test-shell "$repository_root" > "$delegate_configuration"
+assert_file_equals 'empty-initial:0:
+empty-reload:0:
+' "$delegate_configuration"
+
+HERDR_ENV=0 zsh -dfc '
+  typeset -ga HERDR_SHELL_STATUS_DELEGATES=(example-agent alternate-agent)
+  source "$1/herdr-shell-status.plugin.zsh"
+  print -r -- "custom-initial:${#HERDR_SHELL_STATUS_DELEGATES}:${(j:,:)HERDR_SHELL_STATUS_DELEGATES}"
+  source "$1/herdr-shell-status.plugin.zsh"
+  print -r -- "custom-reload:${#HERDR_SHELL_STATUS_DELEGATES}:${(j:,:)HERDR_SHELL_STATUS_DELEGATES}"
+' test-shell "$repository_root" > "$delegate_configuration"
+assert_file_equals 'custom-initial:2:example-agent,alternate-agent
+custom-reload:2:example-agent,alternate-agent
+' "$delegate_configuration"
+
 plugin_log="$test_directory/plugin.log"
 : > "$plugin_log"
 HERDR_TEST_LOG="$plugin_log" zsh -dfi -c '
