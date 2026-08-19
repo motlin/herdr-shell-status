@@ -52,6 +52,56 @@ pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
 pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
 ' "$plugin_log"
 
+delegate_log="$test_directory/delegate.log"
+: > "$delegate_log"
+HERDR_TEST_LOG="$delegate_log" zsh -dfi -c '
+  export HERDR_TEST_SHELL_PID=$$
+  source "$1/herdr-shell-status.plugin.zsh"
+  _herdr_shell_status_preexec "claude" "claude" "claude"
+  _herdr_shell_status_preexec "/opt/example/claude" "/opt/example/claude" "/opt/example/claude"
+  _herdr_shell_status_preexec "EXAMPLE=value command noglob claude" "EXAMPLE=value command noglob claude" "EXAMPLE=value command noglob claude"
+  _herdr_shell_status_preexec "env EXAMPLE=value claude" "env EXAMPLE=value claude" "env EXAMPLE=value claude"
+  _herdr_shell_status_preexec "sudo claude" "sudo claude" "sudo claude"
+  _herdr_shell_status_preexec "time claude" "time claude" "time claude"
+  _herdr_shell_status_preexec "env --ignore-environment --unset EXAMPLE /opt/example/claude" "env --ignore-environment --unset EXAMPLE /opt/example/claude" "env --ignore-environment --unset EXAMPLE /opt/example/claude"
+  _herdr_shell_status_preexec "sudo --non-interactive --user alice claude" "sudo --non-interactive --user alice claude" "sudo --non-interactive --user alice claude"
+  _herdr_shell_status_preexec "time --portability claude" "time --portability claude" "time --portability claude"
+  _herdr_shell_status_preexec "env -i sudo -n time -p claude" "env -i sudo -n time -p claude" "env -i sudo -n time -p claude"
+  _herdr_shell_status_preexec "env EXAMPLE=value true" "env EXAMPLE=value true" "env EXAMPLE=value true"
+  true
+  _herdr_shell_status_precmd
+  _herdr_shell_status_preexec "sudo --non-interactive false" "sudo --non-interactive false" "sudo --non-interactive false"
+  false
+  _herdr_shell_status_precmd
+  _herdr_shell_status_preexec "exec true" "exec true" "exec true"
+  _herdr_shell_status_preexec "command noglob exec true" "command noglob exec true" "command noglob exec true"
+  _herdr_shell_status_preexec "env exec true" "env exec true" "env exec true"
+  false
+  _herdr_shell_status_precmd
+  herdr_shell_status_disable
+' test-shell "$repository_root" >/dev/null 2>&1
+assert_file_equals 'pane|process-info|--pane|w-test:p-test
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|working
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|idle
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|working
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|blocked|--message|command exited with status 1
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|working
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|blocked|--message|command exited with status 1
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+' "$delegate_log"
+
 nested_log="$test_directory/nested.log"
 : > "$nested_log"
 HERDR_TEST_LOG="$nested_log" HERDR_TEST_SHELL_PID=999999 zsh -dfi -c '

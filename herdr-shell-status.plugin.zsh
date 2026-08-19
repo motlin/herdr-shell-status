@@ -40,17 +40,123 @@ _herdr_shell_status_command_name() {
   local -a command_words
   command_words=( ${(z)expanded_command} )
 
-  local command_word
-  for command_word in "${command_words[@]}"; do
-    command_word="${(Q)command_word}"
+  local command_index=1
+  local command_word command_basename option_word
+  local external_wrapper_seen=0
+  while (( command_index <= ${#command_words} )); do
+    command_word="${(Q)command_words[command_index]}"
+    (( command_index++ ))
     if [[ "$command_word" == [A-Za-z_][A-Za-z0-9_]#=* ]]; then
       continue
     fi
-    if [[ "$command_word" == command || "$command_word" == noglob ]]; then
-      continue
-    fi
-    print -r -- "${command_word:t}"
-    return 0
+
+    command_basename="${command_word:t}"
+    case "$command_basename" in
+      command|noglob)
+        if (( external_wrapper_seen )); then
+          print -r -- "$command_basename"
+          return 0
+        fi
+        ;;
+      exec)
+        print -r -- "$command_basename"
+        if (( external_wrapper_seen )); then
+          return 0
+        fi
+        # Status 2 distinguishes the shell builtin from an executable named exec.
+        return 2
+        ;;
+      env)
+        external_wrapper_seen=1
+        while (( command_index <= ${#command_words} )); do
+          option_word="${(Q)command_words[command_index]}"
+          case "$option_word" in
+            --)
+              (( command_index++ ))
+              break
+              ;;
+            -i|--ignore-environment|-0|--null|--debug|-)
+              (( command_index++ ))
+              ;;
+            -u|-C|-P|-S|--unset|--chdir|--split-string|--argv0)
+              (( command_index += 2 ))
+              ;;
+            -u?*|-C?*|-P?*|-S?*|--unset=*|--chdir=*|--split-string=*|--argv0=*)
+              (( command_index++ ))
+              ;;
+            --help|--version|-*)
+              print -r -- "$command_basename"
+              return 0
+              ;;
+            *)
+              break
+              ;;
+          esac
+        done
+        ;;
+      sudo)
+        external_wrapper_seen=1
+        while (( command_index <= ${#command_words} )); do
+          option_word="${(Q)command_words[command_index]}"
+          case "$option_word" in
+            --)
+              (( command_index++ ))
+              break
+              ;;
+            -C|-D|-g|-h|-p|-R|-r|-T|-t|-U|-u|--chdir|--close-from|--group|--host|--other-user|--prompt|--role|--type|--user)
+              (( command_index += 2 ))
+              ;;
+            -C?*|-D?*|-g?*|-h?*|-p?*|-R?*|-r?*|-T?*|-t?*|-U?*|-u?*|--chdir=*|--close-from=*|--group=*|--host=*|--other-user=*|--prompt=*|--role=*|--type=*|--user=*|--preserve-env=*)
+              (( command_index++ ))
+              ;;
+            -A|-b|-E|-H|-i|-K|-k|-n|-P|-S|-s|--askpass|--background|--bell|--login|--non-interactive|--preserve-env|--preserve-groups|--remove-timestamp|--reset-timestamp|--shell|--stdin)
+              (( command_index++ ))
+              ;;
+            -e|-l|-V|-v|--edit|--help|--list|--validate|--version|-*)
+              print -r -- "$command_basename"
+              return 0
+              ;;
+            *)
+              break
+              ;;
+          esac
+        done
+        ;;
+      time)
+        if (( external_wrapper_seen )) || [[ "$command_word" != time ]]; then
+          external_wrapper_seen=1
+        fi
+        while (( command_index <= ${#command_words} )); do
+          option_word="${(Q)command_words[command_index]}"
+          case "$option_word" in
+            --)
+              (( command_index++ ))
+              break
+              ;;
+            -f|-o|--format|--output)
+              (( command_index += 2 ))
+              ;;
+            -f?*|-o?*|--format=*|--output=*)
+              (( command_index++ ))
+              ;;
+            -a|-h|-l|-p|-q|-v|--append|--portability|--quiet|--verbose)
+              (( command_index++ ))
+              ;;
+            --help|--version|-*)
+              print -r -- "$command_basename"
+              return 0
+              ;;
+            *)
+              break
+              ;;
+          esac
+        done
+        ;;
+      *)
+        print -r -- "$command_basename"
+        return 0
+        ;;
+    esac
   done
 
   return 1
@@ -67,10 +173,10 @@ _herdr_shell_status_release() {
 _herdr_shell_status_preexec() {
   emulate -L zsh
 
-  local command_name
-  command_name="$(_herdr_shell_status_command_name "$2")" || command_name=""
+  local command_name command_name_status=0
+  command_name="$(_herdr_shell_status_command_name "$2")" || command_name_status=$?
 
-  if [[ "$command_name" == exec ]] || (( ${HERDR_SHELL_STATUS_DELEGATES[(Ie)$command_name]} )); then
+  if (( command_name_status == 2 )) || (( ${HERDR_SHELL_STATUS_DELEGATES[(Ie)$command_name]} )); then
     _HERDR_SHELL_STATUS_ACTIVE=0
     _herdr_shell_status_release
     return 0
