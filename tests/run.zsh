@@ -29,6 +29,9 @@ plugin_log="$test_directory/plugin.log"
 HERDR_TEST_LOG="$plugin_log" zsh -dfi -c '
   export HERDR_TEST_SHELL_PID=$$
   source "$1/herdr-shell-status.plugin.zsh"
+  return_status() {
+    return "$1"
+  }
   _herdr_shell_status_preexec "true" "true" "true"
   true
   _herdr_shell_status_precmd
@@ -36,6 +39,15 @@ HERDR_TEST_LOG="$plugin_log" zsh -dfi -c '
   source "$1/herdr-shell-status.plugin.zsh"
   _herdr_shell_status_preexec "false" "false" "false"
   false
+  _herdr_shell_status_precmd
+  _herdr_shell_status_preexec "return_status 130" "return_status 130" "return_status 130"
+  return_status 130
+  _herdr_shell_status_precmd
+  _herdr_shell_status_preexec "return_status 137" "return_status 137" "return_status 137"
+  return_status 137
+  _herdr_shell_status_precmd
+  _herdr_shell_status_preexec "return_status 143" "return_status 143" "return_status 143"
+  return_status 143
   _herdr_shell_status_precmd
   _herdr_shell_status_preexec "claude" "claude" "claude"
   herdr_shell_status_disable
@@ -48,6 +60,12 @@ pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
 pane|process-info|--pane|w-test:p-test
 pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|working
 pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|blocked|--message|command exited with status 1
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|working
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|blocked|--message|command exited with status 130
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|working
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|blocked|--message|command exited with status 137
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|working
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|blocked|--message|command exited with status 143
 pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
 pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
 ' "$plugin_log"

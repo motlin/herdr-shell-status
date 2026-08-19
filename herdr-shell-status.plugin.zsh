@@ -201,7 +201,7 @@ _herdr_shell_status_precmd() {
   (( _HERDR_SHELL_STATUS_ACTIVE )) || return 0
   _HERDR_SHELL_STATUS_ACTIVE=0
 
-  if (( command_status == 0 || command_status == 130 || command_status == 137 || command_status == 143 )); then
+  if (( command_status == 0 )); then
     "$_HERDR_SHELL_STATUS_BIN" pane report-agent "$HERDR_PANE_ID" \
       --source "$_HERDR_SHELL_STATUS_SOURCE" \
       --agent "$_HERDR_SHELL_STATUS_AGENT" \
