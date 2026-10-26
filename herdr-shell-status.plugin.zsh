@@ -163,6 +163,88 @@ _herdr_shell_status_command_name() {
   return 1
 }
 
+# Sets REPLY to the command text of a job spec, read in the current shell because subshells have no job table.
+_herdr_shell_status_job_text() {
+  emulate -L zsh
+  REPLY=""
+  zmodload zsh/parameter 2>/dev/null || return 1
+
+  local job_spec="${1:-%+}" job_number="" job_key job_text
+  case "$job_spec" in
+    %|%%|%+)
+      job_number="${(k)jobstates[(r)*:+:*]}"
+      ;;
+    %-)
+      job_number="${(k)jobstates[(r)*:-:*]}"
+      ;;
+    %<->)
+      job_number="${job_spec#%}"
+      ;;
+    %\?*)
+      for job_key job_text in "${(@kv)jobtexts}"; do
+        if [[ "$job_text" == *"${job_spec#%\?}"* ]]; then
+          job_number="$job_key"
+          break
+        fi
+      done
+      ;;
+    %*)
+      for job_key job_text in "${(@kv)jobtexts}"; do
+        if [[ "$job_text" == "${job_spec#%}"* ]]; then
+          job_number="$job_key"
+          break
+        fi
+      done
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  [[ -n "$job_number" && -n "${jobtexts[$job_number]:-}" ]] || return 1
+  REPLY="${jobtexts[$job_number]}"
+}
+
+# Status 0 means some simple command in the list hands the pane to an agent.
+_herdr_shell_status_delegates_command() {
+  emulate -L zsh
+
+  local -a command_words segment_words
+  command_words=( ${(z)1} "" )
+
+  local command_word command_name command_name_status REPLY
+  for command_word in "${command_words[@]}"; do
+    case "$command_word" in
+      ''|'&&'|'||'|';'|'|'|'|&'|'&'|'&|'|'&!'|';|'|';;'|'('|')'|'{'|'}'|'!'|$'\n')
+        if (( ${#segment_words} )); then
+          command_name_status=0
+          command_name="$(_herdr_shell_status_command_name "${(j: :)segment_words}")" || command_name_status=$?
+          if (( command_name_status == 2 )) || (( ${HERDR_SHELL_STATUS_DELEGATES[(Ie)$command_name]} )); then
+            return 0
+          fi
+
+          # A resumed job is delegated when the command that started it is.
+          REPLY=""
+          if [[ "$command_name" == fg ]]; then
+            _herdr_shell_status_job_text "${(Q)segment_words[${segment_words[(i)fg]}+1]}"
+          elif [[ "$command_name" == %* ]]; then
+            _herdr_shell_status_job_text "$command_name"
+          fi
+          if [[ -n "$REPLY" ]] && _herdr_shell_status_delegates_command "$REPLY"; then
+            return 0
+          fi
+        fi
+        segment_words=()
+        ;;
+      *)
+        segment_words+=( "$command_word" )
+        ;;
+    esac
+  done
+
+  return 1
+}
+
 _herdr_shell_status_release() {
   emulate -L zsh
   [[ -n "$_HERDR_SHELL_STATUS_BIN" ]] || return 0
@@ -174,10 +256,7 @@ _herdr_shell_status_release() {
 _herdr_shell_status_preexec() {
   emulate -L zsh
 
-  local command_name command_name_status=0
-  command_name="$(_herdr_shell_status_command_name "$2")" || command_name_status=$?
-
-  if (( command_name_status == 2 )) || (( ${HERDR_SHELL_STATUS_DELEGATES[(Ie)$command_name]} )); then
+  if _herdr_shell_status_delegates_command "$2"; then
     _HERDR_SHELL_STATUS_ACTIVE=0
     _herdr_shell_status_release
     return 0

@@ -153,6 +153,67 @@ pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|bl
 pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
 ' "$delegate_log"
 
+list_log="$test_directory/list.log"
+: > "$list_log"
+HERDR_TEST_LOG="$list_log" zsh -dfi -c '
+  export HERDR_TEST_SHELL_PID=$$
+  source "$1/herdr-shell-status.plugin.zsh"
+  _herdr_shell_status_preexec "cd /tmp && claude" "cd /tmp && claude" "cd /tmp && claude"
+  _herdr_shell_status_preexec "cd /tmp; claude" "cd /tmp; claude" "cd /tmp; claude"
+  _herdr_shell_status_preexec "true || claude" "true || claude" "true || claude"
+  _herdr_shell_status_preexec "true | claude" "true | claude" "true | claude"
+  _herdr_shell_status_preexec "( cd /tmp && claude )" "( cd /tmp && claude )" "( cd /tmp && claude )"
+  _herdr_shell_status_preexec "cd /tmp && true" "cd /tmp && true" "cd /tmp && true"
+  true
+  _herdr_shell_status_precmd
+  herdr_shell_status_disable
+' test-shell "$repository_root" >/dev/null 2>&1
+assert_file_equals 'pane|process-info|--pane|w-test:p-test
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|working
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|idle
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+' "$list_log"
+
+job_log="$test_directory/job.log"
+: > "$job_log"
+HERDR_TEST_LOG="$job_log" zsh -dfi -c '
+  export HERDR_TEST_SHELL_PID=$$
+  typeset -ga HERDR_SHELL_STATUS_DELEGATES=(sleep)
+  source "$1/herdr-shell-status.plugin.zsh"
+  sleep 30 &
+  zsh -fc "sleep 30" &
+  _herdr_shell_status_preexec "fg %1" "fg %1" "fg %1"
+  _herdr_shell_status_preexec "%1" "%1" "%1"
+  _herdr_shell_status_preexec "fg %sle" "fg %sle" "fg %sle"
+  _herdr_shell_status_preexec "fg %?eep 30" "fg %?eep 30" "fg %?eep 30"
+  _herdr_shell_status_preexec "fg %-" "fg %-" "fg %-"
+  _herdr_shell_status_preexec "fg" "fg" "fg"
+  true
+  _herdr_shell_status_precmd
+  _herdr_shell_status_preexec "fg %9" "fg %9" "fg %9"
+  true
+  _herdr_shell_status_precmd
+  kill %1 %2
+  herdr_shell_status_disable
+' test-shell "$repository_root" >/dev/null 2>&1
+assert_file_equals 'pane|process-info|--pane|w-test:p-test
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|working
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|idle
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|working
+pane|report-agent|w-test:p-test|--source|user:zsh-command|--agent|cli|--state|idle
+pane|release-agent|w-test:p-test|--source|user:zsh-command|--agent|cli
+' "$job_log"
+
 nested_log="$test_directory/nested.log"
 : > "$nested_log"
 HERDR_TEST_LOG="$nested_log" HERDR_TEST_SHELL_PID=999999 zsh -dfi -c '
