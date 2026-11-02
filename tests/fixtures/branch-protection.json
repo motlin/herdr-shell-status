@@ -1,17 +1,21 @@
 {
 	"url": "https://example.com/repos/alice/example/branches/main/protection",
-	"required_status_checks": {
+	"required_status_checks":
+	{
 		"url": "https://example.com/repos/alice/example/branches/main/protection/required_status_checks",
 		"strict": false,
 		"contexts": ["Old check"]
 	},
-	"enforce_admins": {
+	"enforce_admins":
+	{
 		"url": "https://example.com/repos/alice/example/branches/main/protection/enforce_admins",
 		"enabled": true
 	},
-	"required_pull_request_reviews": {
+	"required_pull_request_reviews":
+	{
 		"url": "https://example.com/repos/alice/example/branches/main/protection/required_pull_request_reviews",
-		"dismissal_restrictions": {
+		"dismissal_restrictions":
+		{
 			"url": "https://example.com/repos/alice/example/branches/main/protection/dismissal_restrictions",
 			"users": [
 				{
@@ -44,7 +48,8 @@
 					"slug": "example-review-app",
 					"node_id": "TEST_APP_300",
 					"name": "Example review app",
-					"owner": {
+					"owner":
+					{
 						"login": "alice",
 						"id": 100
 					},
@@ -56,7 +61,8 @@
 		"require_code_owner_reviews": true,
 		"required_approving_review_count": 2,
 		"require_last_push_approval": true,
-		"bypass_pull_request_allowances": {
+		"bypass_pull_request_allowances":
+		{
 			"users": [
 				{
 					"login": "bob",
@@ -82,7 +88,8 @@
 			]
 		}
 	},
-	"restrictions": {
+	"restrictions":
+	{
 		"url": "https://example.com/repos/alice/example/branches/main/protection/restrictions",
 		"users": [
 			{
