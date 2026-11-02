@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   # Run pre-commit hooks to verify basic hygiene; mise provides the
-  # system-language hook tools (pre-commit, vp, markdownlint-cli2)
+  # system-language hook tools (pre-commit, oxfmt-next-line, markdownlint-cli2)
   pre-commit:
     runs-on: ubuntu-latest
     steps:

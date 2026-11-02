@@ -11,10 +11,10 @@ mise:
     mise install --quiet
     mise current
 
-# vp fmt
+# oxfmt-next-line
 format:
     pre-commit run just-fmt --all-files
-    vp fmt
+    oxfmt-next-line
 
 # Validate Bash and Zsh source files
 lint:
